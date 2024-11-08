@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة تكاليف إيجار النقل البري</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label, select, input {
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        button {
+            font-size: 18px;
+            margin-top: 15px;
+        }
+        .vehicleForm {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .total-section, .contract-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #eef;
+            border-radius: 5px;
+        }
+        .language-toggle {
+            float: right;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button class="language-toggle" onclick="toggleLanguage()">Change Language / تغيير اللغة</button>
+    <h1 id="title">حاسبة تكاليف إيجار النقل البري</h1>
+
+    <!-- منطقة إدخال بيانات السيارات -->
+    <div id="vehicleFormsContainer">
+        <div class="vehicleForm" id="vehicleForm1">
+            <h3 id="formTitle1">إدخال بيانات السيارة 1</h3>
+            <div>
+                <label for="truckType1" id="truckTypeLabel1">نوع الشاحنة:</label>
+                <select id="truckType1">
+                    <option value="open_truck">شاحنة مفتوحة</option>
+                    <option value="closed_truck">شاحنة مغلقة</option>
+                    <option value="refrigerated_truck">شاحنة مبردة</option>
+                    <option value="frozen_truck">شاحنة مجمدة</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="truckSize1" id="truckSizeLabel1">حجم الشاحنة:</label>
+                <select id="truckSize1">
+                    <option value="5M">5M</option>
+                    <option value="6M">6M</option>
+                    <option value="7M">7M</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="numberOfVehicles1" id="numberOfVehiclesLabel1">عدد السيارات:</label>
+                <input type="number" id="numberOfVehicles1" value="1" min="1">
+            </div>
+
+            <div>
+                <label for="dailyKm1" id="dailyKmLabel1">الكيلومترات اليومية:</label>
+                <input type="number" id="dailyKm1" value="1000" min="0">
+            </div>
+
+            <div>
+                <label for="dailyHours1" id="dailyHoursLabel1">عدد الساعات اليومية:</label>
+                <input type="number" id="dailyHours1" value="10" min="1" max="14">
+            </div>
+        </div>
+    </div>
+
+    <button id="addVehicleButton" onclick="addVehicleForm()">إضافة سيارة أخرى</button>
+    <button id="calculateButton" onclick="calculateTotalCost()">احسب التكلفة الإجمالية</button>
+    <button id="displayContractButton" onclick="displayContract()">عرض العقد</button>
+
+    <h3 id="resultsTitle">النتائج:</h3>
+    <div id="results" class="total-section"></div>
+
+    <h3 id="contractTitle">العقد:</h3>
+    <div id="contract" class="contract-section"></div>
+
+    <script>
+        let vehicleCount = 1;
+        const truckRates = {
+            "open_truck": { "5M": 300, "6M": 350, "7M": 450 },
+            "closed_truck": { "5M": 400, "6M": 430, "7M": 450 },
+            "refrigerated_truck": { "5M": 350, "6M": 650, "7M": 800 },
+            "frozen_truck": { "5M": 370, "6M": 680, "7M": 880 }
+        };
+        let currentLanguage = 'ar';
+
+        function addVehicleForm() {
+            vehicleCount++;
+            const container = document.getElementById('vehicleFormsContainer');
+            const vehicleForm = document.createElement('div');
+            vehicleForm.classList.add('vehicleForm');
+            vehicleForm.id = `vehicleForm${vehicleCount}`;
+            vehicleForm.innerHTML = `
+                <h3 id="formTitle${vehicleCount}">${currentLanguage === 'ar' ? 'إدخال بيانات السيارة' : 'Enter Vehicle Details'} ${vehicleCount}</h3>
+                <div>
+                    <label for="truckType${vehicleCount}" id="truckTypeLabel${vehicleCount}">${currentLanguage === 'ar' ? 'نوع الشاحنة:' : 'Truck Type:'}</label>
+                    <select id="truckType${vehicleCount}">
+                        <option value="open_truck">${currentLanguage === 'ar' ? 'شاحنة مفتوحة' : 'Open Truck'}</option>
+                        <option value="closed_truck">${currentLanguage === 'ar' ? 'شاحنة مغلقة' : 'Closed Truck'}</option>
+                        <option value="refrigerated_truck">${currentLanguage === 'ar' ? 'شاحنة مبردة' : 'Refrigerated Truck'}</option>
+                        <option value="frozen_truck">${currentLanguage === 'ar' ? 'شاحنة مجمدة' : 'Frozen Truck'}</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="truckSize${vehicleCount}" id="truckSizeLabel${vehicleCount}">${currentLanguage === 'ar' ? 'حجم الشاحنة:' : 'Truck Size:'}</label>
+                    <select id="truckSize${vehicleCount}">
+                        <option value="5M">5M</option>
+                        <option value="6M">6M</option>
+                        <option value="7M">7M</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="numberOfVehicles${vehicleCount}" id="numberOfVehiclesLabel${vehicleCount}">${currentLanguage === 'ar' ? 'عدد السيارات:' : 'Number of Vehicles:'}</label>
+                    <input type="number" id="numberOfVehicles${vehicleCount}" value="1" min="1">
+                </div>
+
+                <div>
+                    <label for="dailyKm${vehicleCount}" id="dailyKmLabel${vehicleCount}">${currentLanguage === 'ar' ? 'الكيلومترات اليومية:' : 'Daily Kilometers:'}</label>
+                    <input type="number" id="dailyKm${vehicleCount}" value="1000" min="0">
+                </div>
+
+                <div>
+                    <label for="dailyHours${vehicleCount}" id="dailyHoursLabel${vehicleCount}">${currentLanguage === 'ar' ? 'عدد الساعات اليومية:' : 'Daily Hours:'}</label>
+                    <input type="number" id="dailyHours${vehicleCount}" value="10" min="1" max="14">
+                </div>
+            `;
+            container.appendChild(vehicleForm);
+        }
+
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'ar' ? 'en' : 'ar';
+            document.documentElement.lang = currentLanguage;
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.getElementById('title').textContent = currentLanguage === 'ar' ? 'حاسبة تكاليف إيجار النقل البري' : 'Truck Rental Cost Calculator';
+            document.getElementById('addVehicleButton').textContent = currentLanguage === 'ar' ? 'إضافة سيارة أخرى' : 'Add Another Vehicle';
+            document.getElementById('calculateButton').textContent = currentLanguage === 'ar' ? 'احسب التكلفة الإجمالية' : 'Calculate Total Cost';
+            document.getElementById('displayContractButton').textContent = currentLanguage === 'ar' ? 'عرض العقد' : 'Show Contract';
+            document.getElementById('resultsTitle').textContent = currentLanguage === 'ar' ? 'النتائج:' : 'Results:';
+            document.getElementById('contractTitle').textContent = currentLanguage === 'ar' ? 'العقد:' : 'Contract:';
+            
+            for (let i = 1; i <= vehicleCount; i++) {
+                document.getElementById(`formTitle${i}`).textContent = currentLanguage === 'ar' ? `إدخال بيانات السيارة ${i}` : `Enter Vehicle Details ${i}`;
+                document.getElementById(`truckTypeLabel${i}`).textContent = currentLanguage === 'ar' ? 'نوع الشاحنة:' : 'Truck Type:';
+                document.getElementById(`truckSizeLabel${i}`).textContent = currentLanguage === 'ar' ? 'حجم الشاحنة:' : 'Truck Size:';
+                document
+
+                .getElementById(`numberOfVehiclesLabel${i}`).textContent = currentLanguage === 'ar' ? 'عدد السيارات:' : 'Number of Vehicles:';
+                document.getElementById(`dailyKmLabel${i}`).textContent = currentLanguage === 'ar' ? 'الكيلومترات اليومية:' : 'Daily Kilometers:';
+                document.getElementById(`dailyHoursLabel${i}`).textContent = currentLanguage === 'ar' ? 'عدد الساعات اليومية:' : 'Daily Hours:';
+
+                // تحديث الخيارات في القوائم المنسدلة
+                const truckTypeSelect = document.getElementById(`truckType${i}`);
+                truckTypeSelect.options[0].text = currentLanguage === 'ar' ? 'شاحنة مفتوحة' : 'Open Truck';
+                truckTypeSelect.options[1].text = currentLanguage === 'ar' ? 'شاحنة مغلقة' : 'Closed Truck';
+                truckTypeSelect.options[2].text = currentLanguage === 'ar' ? 'شاحنة مبردة' : 'Refrigerated Truck';
+                truckTypeSelect.options[3].text = currentLanguage === 'ar' ? 'شاحنة مجمدة' : 'Frozen Truck';
+            }
+        }
+
+        function calculateTotalCost() {
+            let totalBaseCost = 0;
+            let totalExtraKmCost = 0;
+            let totalExtraHourCost = 0;
+            let details = '';
+
+            for (let i = 1; i <= vehicleCount; i++) {
+                const truckType = document.getElementById(`truckType${i}`).value;
+                const truckSize = document.getElementById(`truckSize${i}`).value;
+                const numberOfVehicles = parseInt(document.getElementById(`numberOfVehicles${i}`).value);
+                const dailyKm = parseInt(document.getElementById(`dailyKm${i}`).value);
+                const dailyHours = parseInt(document.getElementById(`dailyHours${i}`).value);
+
+                if (isNaN(numberOfVehicles) || isNaN(dailyKm) || isNaN(dailyHours)) {
+                    alert(currentLanguage === 'ar' ? `تأكد من إدخال جميع القيم بشكل صحيح للسيارة ${i}` : `Please make sure all values are correctly entered for vehicle ${i}`);
+                    return;
+                }
+
+                const baseFare = truckRates[truckType][truckSize] * numberOfVehicles * 24;
+                totalBaseCost += baseFare;
+
+                const extraKm = Math.max(0, dailyKm - 1000);
+                const extraKmCost = extraKm * 0.88 * numberOfVehicles * 24;
+                totalExtraKmCost += extraKmCost;
+
+                const extraHours = Math.max(0, dailyHours - 10);
+                const extraHourCost = extraHours * 10 * numberOfVehicles * 24;
+                totalExtraHourCost += extraHourCost;
+
+                details += `
+                    ${currentLanguage === 'ar' ? 'السيارة' : 'Vehicle'} ${i}:
+                    ${currentLanguage === 'ar' ? 'نوع الشاحنة' : 'Truck Type'}: ${truckType}, ${currentLanguage === 'ar' ? 'حجم' : 'Size'}: ${truckSize}, ${currentLanguage === 'ar' ? 'عدد السيارات' : 'Number of Vehicles'}: ${numberOfVehicles}
+                    ${currentLanguage === 'ar' ? 'التكلفة الأساسية' : 'Base Cost'}: ${baseFare.toFixed(2)} ${currentLanguage === 'ar' ? 'ريال' : 'SAR'}
+                    ${currentLanguage === 'ar' ? 'تكلفة الكيلومترات الإضافية' : 'Extra Kilometers Cost'}: ${extraKmCost.toFixed(2)} ${currentLanguage === 'ar' ? 'ريال' : 'SAR'}
+                    ${currentLanguage === 'ar' ? 'تكلفة الساعات الإضافية' : 'Extra Hours Cost'}: ${extraHourCost.toFixed(2)} ${currentLanguage === 'ar' ? 'ريال' : 'SAR'}
+                    ---
+                `;
+            }
+
+            const totalCost = totalBaseCost + totalExtraKmCost + totalExtraHourCost;
+            const totalCostWithDiscount = totalCost * 0.9;
+
+            document.getElementById('results').innerHTML = `
+                <p>${details.replace(/\n/g, '<br>')}</p>
+                <p><strong>${currentLanguage === 'ar' ? 'إجمالي التكلفة قبل الخصم' : 'Total Cost Before Discount'}:</strong> ${totalCost.toFixed(2)} ${currentLanguage === 'ar' ? 'ريال' : 'SAR'}</p>
+                <p><strong>${currentLanguage === 'ar' ? 'إجمالي التكلفة بعد الخصم' : 'Total Cost After Discount'}:</strong> ${totalCostWithDiscount.toFixed(2)} ${currentLanguage === 'ar' ? 'ريال' : 'SAR'}</p>
+            `;
+        }
+
+        function displayContract() {
+            const results = document.getElementById('results').innerText;
+            if (!results) {
+                alert(currentLanguage === 'ar' ? "الرجاء حساب التكلفة أولاً قبل عرض العقد" : "Please calculate the cost first before displaying the contract");
+                return;
+            }
+
+            const contractContent = `
+                <h3>${currentLanguage === 'ar' ? 'عقد إيجار النقل البري' : 'Truck Rental Contract'}</h3>
+                <p>${currentLanguage === 'ar' ? 'الطرف الأول: شركة بالضبط للتجارة -تطبيق لوجستيك- وعنوانه……. ، الطرف الثاني: أسم المستخدم وعنوانه ……..، اتفق الطرفان بكامل أهليتهما على البنود التالية:' : 'First party: Balad Albt Trading -Logistics App- and its address…, Second party: User’s name and address…, both parties agree to the following terms:'}</p>
+                <p>1. ${currentLanguage === 'ar' ? 'تفاصيل التكلفة' : 'Cost Details'}:</p>
+                <pre>${results}</pre>
+                <p>2. ${currentLanguage === 'ar' ? 'بنود المسؤولية' : 'Responsibility Clauses'}:</p>
+                <p>${currentLanguage === 'ar' ? 'مسؤولية المؤجر (الشركة):' : 'Lessor’s Responsibility (Company):'}</p>
+                <ul>
+                    <li>${currentLanguage === 'ar' ? 'الصيانة والإصلاحات: الشركة مسؤولة عن الصيانة الدورية والتأكد من صلاحية الشاحنة للنقل وتوفير بديل عند الأعطال.' : 'Maintenance and repairs: The company is responsible for regular maintenance and ensuring the truck is fit for transport and providing a replacement in case of breakdowns.'}</li>
+                    <li>${currentLanguage === 'ar' ? 'التأمين: تغطية تأمينية أساسية ضد الحوادث، مع خيار تأمين إضافي.' : 'Insurance: Basic coverage against accidents, with an option for additional insurance.'}</li>
+                    <li>${currentLanguage === 'ar' ? 'الدعم الفني: تقديم دعم فني على مدار الساعة.' : 'Technical support: Providing 24/7 technical support.'}</li>
+                </ul>
+                <p>${currentLanguage === 'ar' ? 'مسؤولية المستأجر (العميل):' : 'Lessee’s Responsibility (Client):'}</p>
+                <ul>
+                    <li>${currentLanguage === 'ar' ? 'الاستخدام ضمن الحدود المتفق عليها: يلتزم المستأجر باستخدام الشاحنة وفق الحدود المحددة وتحمل التكاليف الإضافية عند التجاوز.' : 'Usage within agreed limits: The lessee must use the truck within the specified limits and bear additional costs if exceeded.'}</li>
+                    <li>${currentLanguage === 'ar' ? 'سلامة السائق والمعدات: يتحمل المستأجر مسؤولية سلامة السائق وصيانة الشاحنة أثناء الاستخدام.' : 'Driver and equipment safety: The lessee is responsible for the safety of the driver and maintaining the truck during use.'}</li>
+                    <li>${currentLanguage === 'ar' ? 'التعويض عن الأضرار: يتحمل المستأجر تكاليف الإصلاح الناتجة عن سوء الاستخدام أو الحوادث غير المغطاة بالتأمين.' : 'Damage compensation: The lessee is responsible for repair costs resulting from misuse or accidents not covered by insurance.'}</li>
+                </ul>
+                <p>3. ${currentLanguage === 'ar' ? 'التوقيعات' : 'Signatures'}:</p>
+                <p>• ${currentLanguage === 'ar' ? 'توقيع المؤجر' : 'Lessor’s Signature'}: ________________ ${currentLanguage === 'ar' ? 'التاريخ' : 'Date'}: __ / __ / ____</p>
+                <p>• ${currentLanguage === 'ar' ? 'توقيع المستأجر' : 'Lessee’s Signature'}: ________________ ${currentLanguage === 'ar' ? 'التاريخ' : 'Date'}: __ / __ / ____</p>
+            `;
+
+            document.getElementById('contract').innerHTML = contractContent;
+        }
+    </script>
+</body>
+</html>
